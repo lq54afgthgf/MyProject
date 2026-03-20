@@ -19,8 +19,7 @@ jobs:
           python-version: '3.10'
 
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
       - name: Run tests
         run: pytest --junitxml=report.xml
@@ -37,7 +36,7 @@ jobs:
         with:
           script: |
             const prNumber = context.payload.pull_request.number; 
-            const {data: reviews} = await github.pulls.listReviews({ 
+            const {data: reviews} = await github.rest.pulls.listReviews({ 
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: prNumber
@@ -61,3 +60,17 @@ jobs:
           unzip sonar-scanner-cli-4.8.0.2856-linux.zip
           export PATH=$PATH:$(pwd)/sonar-scanner-4.8.0.2856-linux/bin
           sonar-scanner
+          
+      - name: Run flake8 with reviewdog
+        uses: reviewdog/action-flake8@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          level: error
+
+      - name: Run black with reviewdog
+        uses: reviewdog/action-black@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          level: info
